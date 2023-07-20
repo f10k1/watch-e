@@ -14,4 +14,11 @@ export class AuthController {
         return this.authService.signIn(signInDto.username, signInDto.password);
     }
 
+    @HttpCode(HttpStatus.OK)
+    @Post('user')
+    @Public()
+    getUserData(@Body() body: { token: string; }) {
+        return this.authService.getUser(body.token);
+    }
+
 }

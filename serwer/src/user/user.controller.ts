@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpException, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, HttpCode, HttpException, HttpStatus, Post, UnprocessableEntityException } from "@nestjs/common";
 import { Public } from "src/metadata.guard";
 import { UserService } from "./user.service";
 import { RegisterUserDto } from "./user-register.dto";
@@ -12,9 +12,9 @@ export class UserController {
     @Post("register")
     @Public()
     async signUp(@Body() signUpDto: RegisterUserDto) {
-        if (await this.userService.checkIfExists(signUpDto.username, signUpDto.email) > 0) throw new HttpException("user exists", HttpStatus.FORBIDDEN);
+        if (await this.userService.checkIfExists(signUpDto.username, signUpDto.email) > 0) throw new ForbiddenException({ message: { "register": "User exists" } });
 
-        if (signUpDto.password !== signUpDto.passwordConfirm) throw new HttpException("password confirmation must be same as password", HttpStatus.BAD_REQUEST);
+        if (signUpDto.password !== signUpDto.passwordConfirm) throw new UnprocessableEntityException({ message: { "passwordConfirm": "Password confirmation must be same as password" }, statusCode: 422 });
 
         try {
             await this.userService.create(signUpDto);
