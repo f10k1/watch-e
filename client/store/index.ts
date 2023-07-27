@@ -35,6 +35,7 @@ export const useStore = defineStore('index', () => {
                     token: token ?? useCookie("auth").value,
                     ...data
                 };
+                setTimeout(() => alertStore.addAlert("pomyślnie zalogowano"), 2000)
             }
             else {
                 const error = res.error.value?.data;
@@ -46,7 +47,7 @@ export const useStore = defineStore('index', () => {
                 username: null,
             };
             useCookie("auth").value = null;
-            alertStore.addMessage(err.message, err.error);
+            alertStore.addAlert(err.message);
         });
     };
 
@@ -100,11 +101,18 @@ export const useStore = defineStore('index', () => {
         }
     };
 
+    const logout = () => {
+        user.value = { token: null, username: null };
+        useCookie("auth").value = null;
+        router.push("/");
+    };
+
     return {
         auth,
         userinfo,
         fetchUserData,
         register,
         login,
+        logout
     };
 });

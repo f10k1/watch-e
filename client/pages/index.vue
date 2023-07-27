@@ -5,6 +5,14 @@ import { useStore } from "@/store";
 import { useAlertStore } from "@/store/alert";
 import { required } from "@/utils/validators";
 
+definePageMeta({
+    middleware: () => {
+        const auth = useCookie("auth").value;
+
+        if (auth) return navigateTo("/dashboard");
+    }
+});
+
 const store = useStore();
 const alerts = useAlertStore();
 const rules = ref([required]);
@@ -32,12 +40,13 @@ const login = async () => {
 
     return;
 };
+
 </script>
 
 <template>
     <div class="showLoginForm-page">
         <div class="img">
-            <img src="assets/images/showLoginForm-img.jpg" alt="" />
+            <img src="~/assets/images/login-img.jpg" alt="" />
         </div>
         <div>
             <v-fade-transition>

@@ -2,15 +2,20 @@
 import { useStore } from "@/store";
 
 const store = useStore();
-const router = useRouter();
 
 store.fetchUserData();
 
+const layout = ref('default');
+
+watch(() => store.auth, () => {
+    layout.value = store.auth ? 'dashboard' : 'default';
+});
 </script>
 
 
 <template>
-    <NuxtLayout :name="store.auth && 'dashboard'">
+    <NuxtLayout :name="layout">
         <NuxtPage />
+        <Alert />
     </NuxtLayout>
 </template>
