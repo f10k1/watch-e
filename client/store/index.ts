@@ -1,79 +1,63 @@
 import { defineStore } from 'pinia';
 import { useAlertStore } from './alert';
+import User from 'types/user';
 
-interface User {
-    token: string | null,
-    username: string | null,
-}
+
 
 export const useStore = defineStore('index', () => {
 
-    const user: Ref<User> = ref({
-        token: null,
-        username: null,
-    });
+    const user: Ref<User | null> = ref(null);
 
     const router = useRouter();
     const alertStore = useAlertStore();
 
-    const fetchUserData = (token?: string) => {
-        if (!token && !useCookie("auth").value) {
-            user.value = {
-                token: null,
-                username: null,
-            };
-            return;
-        }
-        useCustomFetch("auth/user", {
-            method: "POST",
-            body: { token: token ?? useCookie("auth").value }
-        }).then(res => {
-            const data = (res.data.value as any);
+    const auth = computed(() => user.value?.token != null);
+    const userinfo = computed(() => user.value);
 
-            if (res.status.value == "success") {
-                user.value = {
-                    token: token ?? useCookie("auth").value,
-                    ...data
-                };
-                setTimeout(() => alertStore.addAlert("pomyślnie zalogowano"), 2000)
+    const fetchUserData = async () => {
+        try {
+            const res = await useFetch<User>("/api/user");
+
+            if (res.error.value && res.error.value.data) {
+                user.value = null;
+                alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
+                router.push("/");
+                return;
             }
-            else {
-                const error = res.error.value?.data;
-                throw new Error(error.message, { cause: error.error });
+
+            const data = res.data.value;
+
+            if (res.status.value == "success" && data) {
+                user.value = { ...data };
+                router.push("/dashboard");
             }
-        }).catch((err) => {
-            user.value = {
-                token: null,
-                username: null,
-            };
-            useCookie("auth").value = null;
+        } catch (err: any) {
+            user.value = null;
             alertStore.addAlert(err.message);
-        });
+            router.push("/");
+        }
     };
-
-    const auth = computed(() => user.value.token != null);
-
-    const userinfo = computed(() => user);
 
     const login = async (body: any): Promise<void> => {
         try {
-            const res = await useCustomFetch("auth/login", {
+
+            alertStore.removeMessage('login');
+            alertStore.clearValidationMessages();
+
+            const res = await useFetch<User>("/api/login", {
                 "method": "POST", body: body
             });
-            const data = (res.data.value as any);
-            const error = res.error.value?.data;
-            if (res.status.value == "success") {
-                if (data.token) {
-                    await fetchUserData(data.token);
-                    const cookie = useCookie("auth", { maxAge: 60 * 60 * 24, path: "/" });
-                    cookie.value = data.token;
-                    router.push("/dashboard");
-                }
+
+            if (res.error.value && res.error.value.data) {
+                alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
+                return;
             }
-            else {
-                if (error.message) {
-                    alertStore.addMessage(error.message, error.statusCode);
-                }
+
+            const data = res.data.value;
+
+            if (res.status.value == "success" && data) {
+                user.value = { ...data };
+                router.push("/dashboard");
             }
         } catch (err: any) {
             alertStore.addMessage(err.message, err.error);
@@ -82,19 +66,24 @@ export const useStore = defineStore('index', () => {
 
     const register = async (body: any): Promise<boolean> => {
         try {
-            const res = await useCustomFetch("user/register", {
+
+            alertStore.removeMessage('register');
+            alertStore.clearValidationMessages();
+
+            const res = await useFetch<User>("/api/register", {
                 "method": "POST", body: body
             });
+
+            if (res.error.value && res.error.value.data) {
+                alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
+                return false;
+            }
+
             if (res.status.value == "success") {
                 return true;
             }
-            else {
-                const error = res.error.value?.data;
-                if (error.message) {
-                    alertStore.addMessage(error.message, error.statusCode);
-                }
-                return false;
-            }
+
+            return false;
         } catch (err: any) {
             alertStore.addMessage(err.message, err.status);
             return false;
@@ -102,7 +91,7 @@ export const useStore = defineStore('index', () => {
     };
 
     const logout = () => {
-        user.value = { token: null, username: null };
+        user.value = null;
         useCookie("auth").value = null;
         router.push("/");
     };

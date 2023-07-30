@@ -3,10 +3,9 @@ import { useStore } from "@/store";
 
 const store = useStore();
 
-store.fetchUserData();
+if (useCookie("auth") && useCookie("auth").value) await store.fetchUserData();
 
-const layout = ref('default');
-
+const layout = ref(store.auth ? 'dashboard' :'default');
 watch(() => store.auth, () => {
     layout.value = store.auth ? 'dashboard' : 'default';
 });
