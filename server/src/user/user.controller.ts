@@ -12,9 +12,9 @@ export class UserController {
     @Post("register")
     @Public()
     async signUp(@Body() signUpDto: RegisterUserDto) {
-        if (await this.userService.checkIfExists(signUpDto.username, signUpDto.email) > 0) throw new ForbiddenException({ message: { "register": "User exists" } });
+        if (await this.userService.checkIfExists(signUpDto.username, signUpDto.email) > 0) throw new ForbiddenException({ "register": "User exists" });
 
-        if (signUpDto.password !== signUpDto.passwordConfirm) throw new UnprocessableEntityException({ message: { "passwordConfirm": "Password confirmation must be same as password" }, statusCode: 422 });
+        if (signUpDto.password !== signUpDto.passwordConfirm) throw new UnprocessableEntityException({ "passwordConfirm": "Password confirmation must be same as password" });
 
         try {
             await this.userService.create(signUpDto);

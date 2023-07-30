@@ -16,25 +16,18 @@ export class AuthService {
 
         try {
             console.log(username, password);
-            if (!user || !(await bcrypt.compare(password, user.password))) throw new UnauthorizedException({
-                message: {
-                    auth: "Wrong username or password"
-                },
-                statusCode: HttpStatus.UNAUTHORIZED
-            });
+            if (!user || !(await bcrypt.compare(password, user.password))) throw new UnauthorizedException({ auth: "Wrong username or password" });
             const payload = { username: user.username, sub: user.id };
 
+            delete user.password;
+
             return {
-                token: this.jwtService.sign(payload)
+                token: this.jwtService.sign(payload),
+                ...user
             };
         }
         catch {
-            throw new UnauthorizedException({
-                message: {
-                    auth: "Wrong username or password"
-                },
-                statusCode: HttpStatus.UNAUTHORIZED
-            });
+            throw new UnauthorizedException({ auth: "Wrong username or password" });
         }
     }
 
@@ -46,14 +39,15 @@ export class AuthService {
             if (valid) {
                 const user = await this.usersService.findOne(valid.username);
                 delete user.password;
+                user["token"] = token;
                 return user;
             }
 
-            throw new BadRequestException({ message: { "token": "Your token is invalid" } });
+            throw new BadRequestException({ "token": "Your token is invalid" });
         }
         catch (err) {
-            console.log(err)
-            throw new BadRequestException({ message: { "token": "Your token is invalid" } });
+            console.log(err);
+            throw new BadRequestException({ "token": "Your token is invalid" });
         }
 
 
