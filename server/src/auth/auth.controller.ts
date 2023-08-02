@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from "@nestjs/common";
+import { Body, Controller, Post, HttpCode, HttpStatus, BadRequestException } from "@nestjs/common";
 import { Public } from "src/metadata.guard";
 import { AuthService } from "./auth.service";
 
@@ -17,8 +17,12 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('user')
     @Public()
-    getUserData(@Body() body: { token: string; }) {
-        return this.authService.getUser(body.token);
+    async getUserData(@Body() body: { token: string; }) {
+        const user = await this.authService.getUser(body.token);
+
+        if (!user) return new BadRequestException({ "token": "Your token is invalid" });
+
+        return user;
     }
 
 }

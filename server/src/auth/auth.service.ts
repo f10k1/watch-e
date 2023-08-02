@@ -2,6 +2,7 @@ import { BadRequestException, HttpStatus, Injectable, UnauthorizedException } fr
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Account } from 'src/user/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,7 @@ export class AuthService {
         }
     }
 
-    async getUser(token: string): Promise<any> {
+    async getUser(token: string): Promise<Account | null> {
 
         try {
             const valid = this.jwtService.verify(token);
@@ -43,14 +44,10 @@ export class AuthService {
                 return user;
             }
 
-            throw new BadRequestException({ "token": "Your token is invalid" });
+            return null;
         }
         catch (err) {
-            console.log(err);
-            throw new BadRequestException({ "token": "Your token is invalid" });
+            return null;
         }
-
-
-
     }
 }
