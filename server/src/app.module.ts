@@ -6,6 +6,8 @@ import { AuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { JwtService } from '@nestjs/jwt';
+import { NotificationModule } from './notification/notification.module';
+import { CameraModule } from './camera/camera.module';
 
 @Module({
     imports: [
@@ -19,7 +21,9 @@ import { JwtService } from '@nestjs/jwt';
             "entities": ["./**/*.entity.js"],
         }),
         UserModule,
-        AuthModule
+        AuthModule,
+        CameraModule,
+        NotificationModule,
     ],
     providers: [
         JwtService,
