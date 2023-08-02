@@ -1,5 +1,6 @@
-import { IsEmail, Matches, Min } from "class-validator";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Camera } from "src/camera/camera.entity";
+import { Notification } from "src/notification/notification.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Account {
@@ -13,6 +14,11 @@ export class Account {
     email: string;
 
     @Column()
-    password: string
+    password: string;
 
+    @OneToMany(() => Notification, (notification) => notification.account)
+    notifications: Notification[];
+
+    @OneToMany(() => Notification, (notification) => notification.account)
+    cameras: Camera[];
 }
