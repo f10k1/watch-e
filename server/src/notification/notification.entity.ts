@@ -9,6 +9,9 @@ export class Notification {
     id: number;
 
     @Column()
+    title: string;
+
+    @Column()
     content: string;
 
     @Column({
