@@ -1,7 +1,11 @@
 <script lang="ts" setup>
+import { useNotificationStore } from '~/store/notification';
+
 definePageMeta({
     middleware: ["auth"]
 });
+
+const notificationsStore = useNotificationStore();
 </script>
 
 <template>
@@ -28,7 +32,18 @@ definePageMeta({
                 </v-row>
             </v-col>
             <v-col cols="12" lg="4" class="pa-5">
-                <h4 class="text-h5">Notifications</h4>
+                <v-card>
+                    <v-card-item>
+                        <v-card-title>
+                            <h4>Notifications</h4>
+                        </v-card-title>
+                    </v-card-item>
+                    <v-card-text>
+                        <Notification v-for="notification in notificationsStore.unseen" :key="notification.id"
+                            :notification="notification" :interactive="false"></Notification>
+                    </v-card-text>
+                </v-card>
+
             </v-col>
         </v-row>
     </v-container>

@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import { useStore } from '@/store';
+import { useNotificationStore } from '~/store/notification';
 
 const store = useStore();
+const notificationsStore = useNotificationStore();
+
+notificationsStore.init();
 
 const logout = () => {
     store.logout();
@@ -21,7 +25,7 @@ const logout = () => {
                 <NuxtLink to="dashboard/notifications">
                     <v-list-item prepend-icon="mdi-bell">
                         Notifications
-                        <v-badge inline :content="0"></v-badge>
+                        <v-badge inline :content="notificationsStore.count"></v-badge>
                     </v-list-item>
                 </NuxtLink>
             </v-list>
