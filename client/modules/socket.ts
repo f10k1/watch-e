@@ -15,7 +15,7 @@ export default defineNuxtModule((options, nuxt) => {
             const { authorization } = socket.client.request.headers;
 
             if (!authorization || !authorization.startsWith("Bearer ")) {
-                socket._error("Unauthorized");
+                socket.emit("unauthorized");
                 socket.disconnect(true);
                 return;
             }
@@ -25,12 +25,6 @@ export default defineNuxtModule((options, nuxt) => {
             api.on("connect", () => {
                 api.on("disconnect", () => {
                     socket.disconnect();
-                });
-
-                api.emit("notifications");
-
-                api.on("notifications", (data) => {
-                    socket.emit("notifications", data);
                 });
 
                 api.on("notification", (data) => {
