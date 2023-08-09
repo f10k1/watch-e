@@ -13,10 +13,11 @@ export const useStore = defineStore('index', () => {
 
     const auth = computed(() => user.value?.token != null);
     const userinfo = computed(() => user.value);
+    const token = computed(() => user.value?.token);
 
     const fetchUserData = async () => {
         try {
-            const res = await useFetch<User>("/api/user");
+            const res = await useFetch<User>("/api/user", { method: "POST" });
 
             if (res.error.value && res.error.value.data) {
                 user.value = null;
@@ -99,6 +100,7 @@ export const useStore = defineStore('index', () => {
     return {
         auth,
         userinfo,
+        token,
         fetchUserData,
         register,
         login,
