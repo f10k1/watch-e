@@ -1,31 +1,61 @@
 <script lang="ts" setup>
-import { Notification } from "~/types/notification";
+import { useNotificationStore } from '~/store/notification';
 
-const { notification, interactive } = defineProps(['notification', 'interactive'])
+const { notification, interactive } = defineProps(['notification', 'interactive']);
 
+const open: Ref<boolean> = ref(false);
+const icons: Ref<Record<string, string>> = ref({
+    warning: "mdi-alert",
+    success: "mdi-check",
+    error: "mdi-alert-circle",
+    info: "mdi-information"
+});
+
+const notificationsStore = useNotificationStore();
+
+const type = computed(() => notification.type.toLowerCase());
+
+const remove = () => {
+    notificationsStore.remove(notification.id);
+};
+if (!notification.seen) watch(open, () => {
+    if (!notification.seen) notificationsStore.markAsSeen(notification.id);
+});
 </script>
 
 <template>
-    <div v-if="interactive"></div>
-    <div v-else class="notification py-3 px-10 mt-2" :class="`notification--${notification.type.toLowerCase()}`">
-        {{ notification.content }}
+    <div class="notification py-3 px-5 mt-2 d-flex align-center"
+        :class="[`notification--${type}`, { 'notification--interactive': interactive }]"
+        :style="`background-color: rgba(var(--v-theme-${type}), ${notification.seen ? .5 : 1})`" @click="open = !open">
+        <v-icon class="mr-3" :icon="icons[type]"></v-icon>
+        {{ notification.title }}
+        <v-icon class="ml-15" v-if="interactive" @click="remove" icon="mdi-trash-can-outline"></v-icon>
     </div>
+    <v-expand-transition>
+        <div v-if="open">
+            <div class="notification__content pa-5"
+                :style="`background-color: rgba(var(--v-theme-${type}), ${notification.seen ? .5 : 1})`">
+                {{ notification.content }}
+            </div>
+        </div>
+    </v-expand-transition>
 </template>
 
 <style scoped lang="scss">
 .notification {
-    &--success {
-        background-color: rgb(var(--v-theme-success));
+    &--interactive {
+        transition: .3s filter;
+
+        &:hover {
+            filter: brightness(.8);
+            cursor: pointer;
+        }
     }
-    &--info {
-        background-color: rgb(var(--v-theme-info));
+
+    &__content {
+        filter: brightness(.9);
     }
-    &--warning {
-        background-color: rgb(var(--v-theme-warning));
-    }
-    &--error {
-        background-color: rgb(var(--v-theme-error));
-    }
-    color: rgb(var(--v-theme-surface));
+
+    color: rgb(var(--v-theme-on-surface));
 }
 </style>

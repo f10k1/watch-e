@@ -21,7 +21,7 @@ export const useNotificationStore = defineStore('notification', () => {
         return notification.seen ? curr : curr + 1;
     }, 0));
     const all = computed(() => notifications.value);
-    const unseen = computed(() => notifications.value.filter((notification) => !notification.seen))
+    const unseen = computed(() => notifications.value.filter((notification) => !notification.seen));
 
     const init = async () => {
         try {
@@ -39,7 +39,6 @@ export const useNotificationStore = defineStore('notification', () => {
             }
 
             const data = res.data.value;
-            console.log(data);
 
             if (res.status.value == "success" && data) {
                 notifications.value = data;
@@ -52,10 +51,28 @@ export const useNotificationStore = defineStore('notification', () => {
         useSocket("/notification", [updateNotificationsEvent.value]);
     };
 
+    const remove = (id: number) => {
+        const index = notifications.value.findIndex((notification: Notification): boolean => notification.id === id);
+
+        if (index === -1) return;
+
+        notifications.value.splice(index, 1);
+    };
+
+    const markAsSeen = (id: number) => {
+        const index = notifications.value.findIndex((notification: Notification): boolean => notification.id === id);
+
+        if (index === -1) return;
+
+        notifications.value[index].seen = true;
+    };
+
     return {
         count,
         all,
         unseen,
-        init
+        init,
+        remove,
+        markAsSeen
     };
 });

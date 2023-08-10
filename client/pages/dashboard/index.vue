@@ -31,11 +31,11 @@ const notificationsStore = useNotificationStore();
                     </v-col>
                 </v-row>
             </v-col>
-            <v-col cols="12" lg="4" class="pa-5">
+            <v-col cols="12" lg="4" md="5" class="pa-5">
                 <v-card>
                     <v-card-item>
                         <v-card-title>
-                            <h4>Notifications</h4>
+                            <h4>Latest unseen notifications</h4>
                         </v-card-title>
                     </v-card-item>
                     <v-card-text>

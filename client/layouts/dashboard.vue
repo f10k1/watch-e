@@ -7,6 +7,8 @@ const notificationsStore = useNotificationStore();
 
 notificationsStore.init();
 
+const showNotifications: Ref<boolean> = ref(false);
+
 const logout = () => {
     store.logout();
 };
@@ -22,12 +24,10 @@ const logout = () => {
             <v-divider></v-divider>
 
             <v-list density="compact" nav>
-                <NuxtLink to="dashboard/notifications">
-                    <v-list-item prepend-icon="mdi-bell">
-                        Notifications
-                        <v-badge inline :content="notificationsStore.count"></v-badge>
-                    </v-list-item>
-                </NuxtLink>
+                <v-list-item prepend-icon="mdi-bell" @click="showNotifications = !showNotifications">
+                    Notifications
+                    <v-badge inline :content="notificationsStore.count"></v-badge>
+                </v-list-item>
             </v-list>
             <v-list density="compact" nav>
                 <NuxtLink to="dashboard/cameras">
@@ -65,6 +65,15 @@ const logout = () => {
                     </v-btn>
                 </div>
             </template>
+        </v-navigation-drawer>
+        <v-navigation-drawer temporary v-model="showNotifications" width="auto">
+            
+            <v-list>
+                <v-list-item>Notifications</v-list-item>
+                <v-list-item v-for="notification in notificationsStore.all" :key="notification.id">
+                    <Notification :notification="notification" :interactive="true"></Notification>
+                </v-list-item>
+            </v-list>
         </v-navigation-drawer>
         <v-main>
             <slot></slot>
