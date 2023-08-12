@@ -59,12 +59,34 @@ export const useNotificationStore = defineStore('notification', () => {
         notifications.value.splice(index, 1);
     };
 
-    const markAsSeen = (id: number) => {
+    const markAsSeen = async (id: number) => {
         const index = notifications.value.findIndex((notification: Notification): boolean => notification.id === id);
 
         if (index === -1) return;
 
-        notifications.value[index].seen = true;
+        try {
+            const res = await useFetch(`/api/notification/${notifications.value[index].id}`, { method: "PATCH" });
+
+            if (res.error.value && res.error.value.data) {
+                if (res.error.value.data.statusCode === 401) {
+                    alertStore.addAlert("Your session expired.");
+                    store.logout();
+                }
+                else {
+                    alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
+                }
+                return;
+            }
+
+            const data = res.data.value;
+
+            if (res.status.value == "success") {
+                notifications.value[index].seen = true;
+            }
+        } catch (err: any) {
+            alertStore.addAlert(err.message);
+        }
+
     };
 
     return {
