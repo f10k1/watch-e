@@ -13,7 +13,10 @@ export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig();
 
-    const res = await $fetch<Notification[]>(`${config.api_url}/notification/all`, {
+    const id = getRouterParam(event, 'id');
+
+    const res = await $fetch<Notification[]>(`${config.api_url}/notification/${id}`, {
+        method: "PATCH",
         headers: {
             authorization: "Bearer " + auth
         }
@@ -23,8 +26,6 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, res.statusCode ?? 401);
         return res;
     }
-
-    console.log(res)
 
     return res;
 });
