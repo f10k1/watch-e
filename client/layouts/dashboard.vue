@@ -69,9 +69,9 @@ const logout = () => {
         <v-navigation-drawer temporary v-model="showNotifications" width="auto">
             
             <v-list>
-                <v-list-item>Notifications</v-list-item>
-                <v-list-item v-for="notification in notificationsStore.all" :key="notification.id">
-                    <Notification :notification="notification" :interactive="true"></Notification>
+                <v-list-item>Unseen notifications</v-list-item>
+                <v-list-item v-for="notification in notificationsStore.unseen" :key="notification.id">
+                    <Notification :notification="notification"></Notification>
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>

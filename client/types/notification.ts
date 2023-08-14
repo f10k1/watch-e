@@ -1,8 +1,14 @@
-export interface Notification{
+import { Camera } from "~/types/camera";
+
+export interface Notification {
     id: number,
     content: string,
     type: NotificationTypes,
-    seen: boolean
+    seen: boolean,
+    movement: boolean,
+    title: string,
+    camera: Camera,
+    created_at: Date,
 }
 
 export enum NotificationTypes {

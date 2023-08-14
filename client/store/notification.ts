@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useStore } from '~/store';
 import { Notification } from '~/types/notification';
 import { useAlertStore } from '~/store/alert';
+import { useCustomFetch } from '~/composables/use-custom-fetch';
 
 export const useNotificationStore = defineStore('notification', () => {
 
@@ -22,25 +23,19 @@ export const useNotificationStore = defineStore('notification', () => {
     }, 0));
     const all = computed(() => notifications.value);
     const unseen = computed(() => notifications.value.filter((notification) => !notification.seen));
+    const filtered = computed(() => (from?: Date, to?: Date, movement?: boolean, camera?: number) => {
+        return notifications.value.filter((notification) => {
+            if (from !== null) {
+                notification
+            }
+        })
+    });
 
     const init = async () => {
         try {
-            const res = await useFetch<Notification[]>("/api/notification", { method: "GET" });
+            const { data } = await useCustomFetch<Notification>("/api/notification", { method: "GET" });
 
-            if (res.error.value && res.error.value.data) {
-                if (res.error.value.data.statusCode === 401) {
-                    alertStore.addAlert("Your session expired.");
-                    store.logout();
-                }
-                else {
-                    alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
-                }
-                return;
-            }
-
-            const data = res.data.value;
-
-            if (res.status.value == "success" && data) {
+            if (data) {
                 notifications.value = data;
             }
         }
@@ -51,12 +46,19 @@ export const useNotificationStore = defineStore('notification', () => {
         useSocket("/notification", [updateNotificationsEvent.value]);
     };
 
-    const remove = (id: number) => {
+    const remove = async (id: number) => {
         const index = notifications.value.findIndex((notification: Notification): boolean => notification.id === id);
 
         if (index === -1) return;
 
-        notifications.value.splice(index, 1);
+        try {
+            const { error } = await useCustomFetch<null>(`/api/notification/${notifications.value[index].id}`, { method: "DELETE" });
+
+            if (!error) notifications.value.splice(index, 1);
+
+        } catch (err: any) {
+            alertStore.addAlert(err.message);
+        }
     };
 
     const markAsSeen = async (id: number) => {
@@ -65,28 +67,13 @@ export const useNotificationStore = defineStore('notification', () => {
         if (index === -1) return;
 
         try {
-            const res = await useFetch(`/api/notification/${notifications.value[index].id}`, { method: "PATCH" });
+            const { error } = await useCustomFetch<null>(`/api/notification/${notifications.value[index].id}`, { method: "PATCH" });
 
-            if (res.error.value && res.error.value.data) {
-                if (res.error.value.data.statusCode === 401) {
-                    alertStore.addAlert("Your session expired.");
-                    store.logout();
-                }
-                else {
-                    alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
-                }
-                return;
-            }
+            if (!error) notifications.value[index].seen = true;
 
-            const data = res.data.value;
-
-            if (res.status.value == "success") {
-                notifications.value[index].seen = true;
-            }
         } catch (err: any) {
             alertStore.addAlert(err.message);
         }
-
     };
 
     return {

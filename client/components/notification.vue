@@ -29,7 +29,7 @@ if (!notification.seen) watch(open, () => {
         :style="`background-color: rgba(var(--v-theme-${type}), ${notification.seen ? .5 : 1})`" @click="open = !open">
         <v-icon class="mr-3" :icon="icons[type]"></v-icon>
         {{ notification.title }}
-        <v-icon class="ml-15" v-if="interactive" @click="remove" icon="mdi-trash-can-outline"></v-icon>
+        <v-icon class="ml-auto" v-if="interactive" @click="remove" icon="mdi-trash-can-outline"></v-icon>
     </div>
     <v-expand-transition>
         <div v-if="open">
