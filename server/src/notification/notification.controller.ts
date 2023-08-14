@@ -1,17 +1,17 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Patch, Post, Req } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Patch, Post, Req } from "@nestjs/common";
 import { Public } from "src/metadata.guard";
 import { NotificationDto } from "./notification.dto";
 import { NotificationService } from "./notification.service";
 import { Request } from "express";
 import { Notification } from "./notification.entity";
-import { Account } from "src/user/user.entity";
 import { CameraService } from "src/camera/camera.service";
 import { NotificationGateway } from "./notification.gateway";
+import { UserService } from "src/user/user.service";
 
 @Controller("notification")
 export class NotificationController {
 
-    constructor(private notificationService: NotificationService, private cameraService: CameraService, private notificationGateway: NotificationGateway) { }
+    constructor(private notificationService: NotificationService, private cameraService: CameraService, private notificationGateway: NotificationGateway, private userService: UserService) { }
 
     @HttpCode(HttpStatus.CREATED)
     @Post("add")
@@ -34,7 +34,11 @@ export class NotificationController {
     @HttpCode(HttpStatus.OK)
     @Get("all")
     async getAll(@Req() req: Request) {
-        const notifications: Notification[] = await this.notificationService.getAll(req.user["sub"]);
+        const user = await this.userService.findById(req.user["sub"]);
+
+        if (!user) return new ForbiddenException("User not provided.");
+
+        const notifications: Notification[] = await this.notificationService.getAll(user);
 
         return notifications;
     }
@@ -44,16 +48,32 @@ export class NotificationController {
     async updateNotification(@Req() req: Request, @Param() params: any) {
         if (!params.id) return new BadRequestException("Provide notification id");
 
-        const notification = await this.notificationService.getOneById(params.id);
+        const notification = await this.notificationService.findById(params.id);
 
         if (!notification) return new NotFoundException();
-
-        console.log(notification.account.id, req.user);
 
         if (notification.account.id !== req.user["sub"]) return new ForbiddenException();
 
         try {
             await this.notificationService.markAsSeen(notification);
+        } catch {
+            return new InternalServerErrorException("Something went wrong.");
+        }
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @Delete(':id')
+    async deleteNotification(@Req() req: Request, @Param() params: any) {
+        if (!params.id) return new BadRequestException("Provide notification id");
+
+        const notification = await this.notificationService.findById(params.id);
+
+        if (!notification) return new NotFoundException();
+
+        if (notification.account.id !== req.user["sub"]) return new ForbiddenException();
+
+        try {
+            await this.notificationService.remove(notification);
         } catch {
             return new InternalServerErrorException("Something went wrong.");
         }

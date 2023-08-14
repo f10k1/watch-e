@@ -1,15 +1,13 @@
-import { ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Notification } from "./notification.entity";
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
-import { NotificationService } from "./notification.service";
-import { Inject, forwardRef } from "@nestjs/common";
 
 
 @WebSocketGateway({ namespace: 'notification', cors: { origin: "http://localhost:3000", serveClient: false } })
 export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
-    constructor(private authService: AuthService, @Inject(forwardRef(() => NotificationService)) private notificationService: NotificationService) { }
+    constructor(private authService: AuthService) { }
 
     @WebSocketServer()
     server: Server;
@@ -32,12 +30,6 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
         };
         this.connectedUsers.set(client.id, user.id);
     };
-
-    @SubscribeMessage('notifications')
-    async getAllNotifications(@ConnectedSocket() client: Socket) {
-        const notifications = await this.notificationService.getAll(client.data.id);
-        client.emit("notifications", notifications ?? []);
-    }
 
     sendNotification(notification: Notification, userId: number) {
         let client;
