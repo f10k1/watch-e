@@ -49,6 +49,7 @@ const notificationsStore = useNotificationStore();
     </v-container>
 </template>
 
+<style lang="scss" scoped>
 .notifications {
     position: sticky;
     top: 36px;
