@@ -26,14 +26,14 @@ export const useNotificationStore = defineStore('notification', () => {
     const filtered = computed(() => (from?: Date, to?: Date, movement?: boolean, camera?: number) => {
         return notifications.value.filter((notification) => {
             if (from !== null) {
-                notification
+                notification;
             }
-        })
+        });
     });
 
     const init = async () => {
         try {
-            const { data } = await useCustomFetch<Notification>("/api/notification", { method: "GET" });
+            const { data } = await useCustomFetch<Notification[]>("/api/notification", { method: "GET" });
 
             if (data) {
                 notifications.value = data;
