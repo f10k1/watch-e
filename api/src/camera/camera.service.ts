@@ -5,6 +5,7 @@ import { Repository } from "typeorm";
 import { CreateCameraDto } from "./camera.dto";
 import { UserService } from "src/user/user.service";
 import { Account } from "src/user/user.entity";
+import * as Crypto from "crypto";
 
 @Injectable()
 export class CameraService {
@@ -14,7 +15,8 @@ export class CameraService {
         return this.cameraRepository.findOne({ where: { id }, relations: { account: true } });
     }
 
-    async create(cameraDto: CreateCameraDto, key: string, user: Account): Promise<Camera> {
+    async create(cameraDto: CreateCameraDto, user: Account): Promise<Camera> {
+        const key = Crypto.randomBytes(48).toString("ascii");
         const notification = await this.cameraRepository.create({ name: cameraDto.name, key, account: user });
         return await this.cameraRepository.save(notification);
     }

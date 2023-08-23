@@ -5,7 +5,6 @@ import { CameraService } from "src/camera/camera.service";
 import { CreateCameraDto } from "./camera.dto";
 import { UserService } from "src/user/user.service";
 import { Camera } from "./camera.entity";
-import * as Crypto from "crypto";
 
 @Controller("notification")
 export class CameraController {
@@ -21,11 +20,9 @@ export class CameraController {
         if (!user) return new ForbiddenException("User not provided.");
 
         try {
-            const key = Crypto.randomBytes(48).toString("ascii");
+            const camera = await this.cameraService.create(cameraDto, user);
 
-            const camera = await this.cameraService.create(cameraDto, key, user);
-
-            return { camera, key };
+            return { camera };
         }
         catch (err) {
             return new InternalServerErrorException("Something went wrong.");
