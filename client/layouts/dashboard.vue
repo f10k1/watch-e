@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import { useStore } from '@/store';
+import { useCameraStore } from '~/store/camera';
 import { useNotificationStore } from '~/store/notification';
 
 const store = useStore();
 const notificationsStore = useNotificationStore();
+const camerasStore = useCameraStore();
+
 
 notificationsStore.init();
+camerasStore.init();
 
 const showNotifications: Ref<boolean> = ref(false);
 
@@ -67,7 +71,7 @@ const logout = () => {
             </template>
         </v-navigation-drawer>
         <v-navigation-drawer temporary v-model="showNotifications" width="auto">
-            
+
             <v-list>
                 <v-list-item>Unseen notifications</v-list-item>
                 <v-list-item v-for="notification in notificationsStore.unseen" :key="notification.id">

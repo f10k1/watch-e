@@ -47,7 +47,7 @@ const notificationsStore = useNotificationStore();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="camera in camerasStore.all" :key="camera.id">
+                                        <tr v-for="camera in camerasStore.limited(3)" :key="camera.id">
                                             <td>{{ camera.name }}</td>
                                             <td class="text-center">
                                                 <v-badge inline :color="camera.accessible ? 'success' : 'error'"></v-badge>

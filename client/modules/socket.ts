@@ -36,5 +36,39 @@ export default defineNuxtModule((options, nuxt) => {
                 api.disconnect();
             });
         });
+
+        io.of('camera').on('connect', (socket) => {
+            const { authorization } = socket.client.request.headers;
+
+            if (!authorization || !authorization.startsWith("Bearer ")) {
+                socket.emit("unauthorized");
+                socket.disconnect(true);
+                return;
+            }
+
+            const api = ioClient(`${api_url}/camera`, { extraHeaders: { authorization } }).connect();
+
+            api.on("connect", () => {
+                api.on("disconnect", () => {
+                    socket.disconnect();
+                });
+
+                api.on("availables", (data) => {
+                    socket.emit("availables", data);
+                });
+
+                api.on("accessible", (data) => {
+                    socket.emit("accessible", data);
+                });
+
+                api.on("inaccessible", (data) => {
+                    socket.emit("inaccessible", data);
+                });
+            });
+
+            socket.on("disconnect", () => {
+                api.disconnect();
+            });
+        });
     });
 });

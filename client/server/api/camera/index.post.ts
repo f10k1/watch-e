@@ -1,5 +1,3 @@
-import { Camera } from "../../../types/camera";
-
 export default defineEventHandler(async (event) => {
     const { auth } = parseCookies(event);
 
@@ -15,10 +13,14 @@ export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig();
 
-    const res = await $fetch<Camera[]>(`${config.api_url}/camera`, {
+    const body = await readBody(event);
+
+    const res = await $fetch<Notification[]>(`${config.api_url}/camera`, {
+        method: "POST",
         headers: {
             authorization: "Bearer " + auth
-        }
+        },
+        body
     }).catch(error => error.data);
 
     if (res.message) {

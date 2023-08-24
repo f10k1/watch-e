@@ -15,18 +15,34 @@ export const useCameraStore = defineStore('camera', () => {
         cameraAccessible: {
             name: "accessible",
             callback: (data: number) => {
-                console.log(data);
+                const index = cameras.value.findIndex((camera) => camera.id === data);
+                if (index === -1) return;
+
+                cameras.value[index].accessible = true;
             }
         },
         cameraInaccessible: {
             name: "inaccessible",
             callback: (data: number) => {
-                console.log(data);
+                const index = cameras.value.findIndex((camera) => camera.id === data);
+                if (index === -1) return;
+
+                cameras.value[index].accessible = false;
+            }
+        },
+        camerasActive: {
+            name: "availables",
+            callback: (data: number[]) => {
+                cameras.value.forEach((camera) => {
+                    if (data.includes(camera.id)) camera.accessible = true;
+                });
             }
         }
     });
 
     const all = computed(() => cameras.value);
+
+    const limited = computed(() => (limit: number) => cameras.value.slice(0, limit));
 
     const init = async () => {
         try {
@@ -40,27 +56,24 @@ export const useCameraStore = defineStore('camera', () => {
             alertStore.addAlert(err.message);
         }
 
-        useSocket("/notification", [events.cameraAccessible, events.cameraInaccessible]);
+        useSocket("/camera", [events.cameraAccessible, events.cameraInaccessible, events.camerasActive]);
     };
 
-    const remove = async (id: number) => {
-        const index = cameras.value.findIndex((camera: Camera): boolean => camera.id === id);
-
-        if (index === -1) return;
-
+    const remove = async (cameraIds: number[]): Promise<boolean> => {
         try {
-            const { error } = await useCustomFetch<null>(`/api/notification/${cameras.value[index].id}`, { method: "DELETE" });
+            const { error } = await useCustomFetch<null>(`/api/camera/`, { method: "DELETE", body: { targets: cameraIds } });
+            if (!error) cameras.value = cameras.value.filter((camera) => !cameraIds.includes(camera.id));
 
-            if (!error) cameras.value.splice(index, 1);
-
+            return true;
         } catch (err: any) {
             alertStore.addAlert(err.message);
+            return false;
         }
     };
 
     const add = async (name: string): Promise<Camera | null> => {
         try {
-            const { data } = await useCustomFetch<Camera>(`/api/notification`, { method: "POST" });
+            const { data } = await useCustomFetch<Camera>(`/api/camera`, { method: "POST", body: { name } });
 
             if (data) {
                 cameras.value.push(data);
@@ -76,6 +89,7 @@ export const useCameraStore = defineStore('camera', () => {
 
     return {
         all,
+        limited,
         init,
         remove,
         add
