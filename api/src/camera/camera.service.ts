@@ -16,7 +16,7 @@ export class CameraService {
     }
 
     async create(cameraDto: CreateCameraDto, user: Account): Promise<Camera> {
-        const key = Crypto.randomBytes(48).toString("ascii");
+        const key = Crypto.randomBytes(48).toString("hex");
         const notification = await this.cameraRepository.create({ name: cameraDto.name, key, account: user });
         return await this.cameraRepository.save(notification);
     }

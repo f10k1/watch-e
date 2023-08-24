@@ -19,6 +19,6 @@ export class Account {
     @OneToMany(() => Notification, (notification) => notification.account)
     notifications: Notification[];
 
-    @OneToMany(() => Notification, (notification) => notification.account)
+    @OneToMany(() => Camera, (camera) => camera.account)
     cameras: Camera[];
 }

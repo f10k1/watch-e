@@ -2,18 +2,17 @@ import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get,
 import { Public } from "src/metadata.guard";
 import { Request } from "express";
 import { CameraService } from "src/camera/camera.service";
-import { CreateCameraDto } from "./camera.dto";
+import { CreateCameraDto, DeleteCameraDto } from "./camera.dto";
 import { UserService } from "src/user/user.service";
 import { Camera } from "./camera.entity";
 
-@Controller("notification")
+@Controller("camera")
 export class CameraController {
 
     constructor(private cameraService: CameraService, private userService: UserService) { }
 
     @HttpCode(HttpStatus.CREATED)
-    @Post("add")
-    @Public()
+    @Post("")
     async add(@Req() req: Request, @Body() cameraDto: CreateCameraDto) {
         const user = await this.userService.findById(req.user["sub"]);
 
@@ -22,7 +21,7 @@ export class CameraController {
         try {
             const camera = await this.cameraService.create(cameraDto, user);
 
-            return { camera };
+            return camera;
         }
         catch (err) {
             return new InternalServerErrorException("Something went wrong.");
@@ -30,7 +29,7 @@ export class CameraController {
     }
 
     @HttpCode(HttpStatus.OK)
-    @Get("all")
+    @Get("")
     async getAll(@Req() req: Request) {
         const user = await this.userService.findById(req.user["sub"]);
 
@@ -60,18 +59,26 @@ export class CameraController {
     }
 
     @HttpCode(HttpStatus.OK)
-    @Delete(':id')
-    async deleteNotification(@Req() req: Request, @Param() params: any) {
-        if (!params.id) return new BadRequestException("Provide camera id");
+    @Delete('')
+    async deleteNotification(@Req() req: Request, @Body() deleteCameraDto: DeleteCameraDto) {
+        const { targets } = deleteCameraDto;
 
-        const camera = await this.cameraService.findById(params.id);
+        if (!targets || targets.length === 0) return new BadRequestException("Provide cameras to delete");
 
-        if (!camera) return new NotFoundException();
+        const cameras: Camera[] = [];
 
-        if (camera.account.id !== req.user["sub"]) return new ForbiddenException();
+        for (let id of targets) {
+            const camera = await this.cameraService.findById(id);
+
+            if (!camera) return new NotFoundException();
+
+            if (camera.account.id !== req.user["sub"]) return new ForbiddenException();
+
+            cameras.push(camera);
+        }
 
         try {
-            await this.cameraService.remove(camera);
+            cameras.forEach(async (camera) => await this.cameraService.remove(camera));
         } catch {
             return new InternalServerErrorException("Something went wrong.");
         }

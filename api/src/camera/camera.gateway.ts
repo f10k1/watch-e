@@ -7,7 +7,7 @@ import { CustomSocket } from "src/types.global";
 import { Camera } from "./camera.entity";
 import { Account } from "src/user/user.entity";
 
-@WebSocketGateway({ namespace: 'camera', cors: { origin: "http://localhost:3000" }, serveClient: false })
+@WebSocketGateway({ namespace: 'camera', serveClient: false })
 export class CameraGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     constructor(private authService: AuthService, @Inject(forwardRef(() => CameraService)) private cameraService: CameraService) { }
@@ -37,7 +37,10 @@ export class CameraGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const cameras: number[] = [];
 
             for (let [key, value] of (this.server.sockets as any as Map<string, CustomSocket<Account>>).entries()) {
-                if (!(value instanceof Camera) || (value.entity as any as Camera).account.id !== user.id) continue;
+
+                if (key === client.id) continue;
+
+                if (!(value.entity instanceof Camera) || (value.entity as any as Camera).account.id !== user.id) continue;
 
                 value.sockets.set(user.id, client);
                 value.emit("active");
@@ -59,21 +62,34 @@ export class CameraGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return;
         }
 
-        client.sockets = new Map();
         client.entity = camera;
-
         const userClients: string[] = [];
 
         for (let [key, value] of (this.server.sockets as unknown as Map<string, CustomSocket<Camera | Account>>).entries()) {
 
-            if (value instanceof Camera && value.entity.id === camera.id) {
+            if (key === client.id) continue;
+
+            if (value.entity instanceof Camera && value.entity.id === camera.id) {
+
                 client.disconnect();
                 return;
             }
 
-            if (!(value instanceof Account) || (value.entity as Account).cameras.findIndex(entity => camera.id === entity.id) === -1) continue;
+            if (!(value.entity instanceof Account) || (value.entity as Account).cameras.findIndex(entity => camera.id === entity.id) === -1) continue;
+
+            userClients.push(key);
 
         }
+
+        client.sockets = new Map();
+
+
+        if (userClients.length === 0) {
+            client.emit("idle");
+            return;
+        }
+
+        client.emit("active");
 
         userClients.forEach(userClient => {
             const value = (this.server.sockets as unknown as Map<string, CustomSocket<Camera | Account>>).get(userClient);
@@ -86,6 +102,9 @@ export class CameraGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     handleDisconnect(client: CustomSocket<Camera | Account>) {
+
+        if (!client.sockets) return;
+
         //If camera disconnected then let user know it's inaccessible
         if (client.entity instanceof Camera) {
             client.sockets.forEach(user => {
