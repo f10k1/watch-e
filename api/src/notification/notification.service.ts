@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { NotificationDto } from "./notification.dto";
 import { Notification } from "./notification.entity";
 import { UserService } from "src/user/user.service";
-import { Camera } from "src/camera/camera.entity";
+import { Device } from "src/device/device.entity";
 import { Account } from "src/user/user.entity";
 
 @Injectable()
@@ -14,9 +14,9 @@ export class NotificationService {
         private userService: UserService
     ) { };
 
-    async create(notificationDto: NotificationDto, camera: Camera): Promise<Notification> {
+    async create(notificationDto: NotificationDto, device: Device): Promise<Notification> {
 
-        const notification = await this.notificationRepository.create({ content: notificationDto.content, type: notificationDto.type, account: camera.account });
+        const notification = await this.notificationRepository.create({ content: notificationDto.content, type: notificationDto.type, account: device.account });
 
         return await this.notificationRepository.save(notification);
 

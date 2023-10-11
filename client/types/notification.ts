@@ -1,4 +1,4 @@
-import { Camera } from "~/types/camera";
+import { Device } from "~/types/device";
 
 export interface Notification {
     id: number,
@@ -7,7 +7,7 @@ export interface Notification {
     seen: boolean,
     movement: boolean,
     title: string,
-    camera: Camera,
+    device: Device,
     created_at: Date,
 }
 

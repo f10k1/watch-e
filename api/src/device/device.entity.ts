@@ -3,7 +3,7 @@ import { Account } from "src/user/user.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-export class Camera {
+export class Device {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -13,9 +13,9 @@ export class Camera {
     @Column()
     key: string;
 
-    @ManyToOne(() => Account, (account) => account.cameras)
+    @ManyToOne(() => Account, (account) => account.devices)
     account: Account;
 
-    @OneToMany(() => Notification, (notification) => notification.camera)
+    @OneToMany(() => Notification, (notification) => notification.device)
     notifications: Notification[];
 }

@@ -23,7 +23,7 @@ export const useNotificationStore = defineStore('notification', () => {
     }, 0));
     const all = computed(() => notifications.value);
     const unseen = computed(() => notifications.value.filter((notification) => !notification.seen));
-    const filtered = computed(() => (from?: Date, to?: Date, movement?: boolean, camera?: number) => {
+    const filtered = computed(() => (from?: Date, to?: Date, movement?: boolean, device?: number) => {
         return notifications.value.filter((notification) => {
             if (from !== null) {
                 notification;

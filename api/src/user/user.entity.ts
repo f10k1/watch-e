@@ -1,4 +1,4 @@
-import { Camera } from "src/camera/camera.entity";
+import { Device } from "src/device/device.entity";
 import { Notification } from "src/notification/notification.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -19,6 +19,6 @@ export class Account {
     @OneToMany(() => Notification, (notification) => notification.account)
     notifications: Notification[];
 
-    @OneToMany(() => Camera, (camera) => camera.account)
-    cameras: Camera[];
+    @OneToMany(() => Device, (device) => device.account)
+    devices: Device[];
 }

@@ -5,9 +5,18 @@ export default defineNuxtConfig({
         transpile: ['vuetify']
     },
     modules: [
-        '@pinia/nuxt'
+        '@pinia/nuxt',
     ],
+    app: {
+        head: {
+            link: [{
+                rel: 'manifest',
+                href: '/manifest.json'
+            }]
+        }
+    },
     runtimeConfig: {
-        api_url: process.env.API_URL
+        api_url: process.env.API_URL,
+        ws_url: process.env.WS_URL
     }
 });

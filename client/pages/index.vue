@@ -100,6 +100,7 @@ const login = async () => {
             width: 100%;
             height: auto;
         }
+
     }
 
     form {
@@ -110,6 +111,34 @@ const login = async () => {
         padding: 40px;
         backdrop-filter: blur(5px);
         background: rgba(0, 0, 0, 0.9);
+    }
+
+    @media screen and (max-width: 1024px) {
+        .img {
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+        }
+
+        form {
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(50%);
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .img {
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+        }
+
+        form {
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 80px);
+        }
     }
 }
 </style>

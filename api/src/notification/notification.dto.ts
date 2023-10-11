@@ -3,8 +3,8 @@ import { NotificationTypes } from "./notification.types";
 
 export class NotificationDto {
 
-    @IsNumber(null, { message: "Provide camera Id" })
-    camera: number;
+    @IsNumber(null, { message: "Provide device Id" })
+    device: number;
 
     @MinLength(4, { message: "Value must be at least 4 characters long" })
     @MaxLength(255, { message: "Value must be at most 36 characters long" })
@@ -31,7 +31,7 @@ export class FilterNotificationDto {
     @ValidateIf((object, value) => value !== null)
     to: string;
 
-    @IsNumber(null, { message: "Camera Id must be an number" })
+    @IsNumber(null, { message: "Device Id must be an number" })
     @ValidateIf((object, value) => value !== null)
-    camera: number;
+    device: number;
 }

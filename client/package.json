@@ -11,6 +11,7 @@
   "devDependencies": {
     "@nuxt/devtools": "latest",
     "@types/node": "^18.16.19",
+    "@types/ws": "^8.5.5",
     "nuxt": "^3.6.2"
   },
   "dependencies": {
@@ -20,9 +21,10 @@
     "chart.js": "^4.3.3",
     "pinia": "^2.1.4",
     "sass": "^1.63.6",
-    "socket.io": "^4.7.1",
-    "socket.io-client": "^4.7.1",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
     "vue-chartjs": "^5.2.0",
-    "vuetify": "^3.3.7"
+    "vuetify": "^3.3.7",
+    "ws": "^8.13.0"
   }
 }

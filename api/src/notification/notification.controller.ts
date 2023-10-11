@@ -4,27 +4,27 @@ import { NotificationDto } from "./notification.dto";
 import { NotificationService } from "./notification.service";
 import { Request } from "express";
 import { Notification } from "./notification.entity";
-import { CameraService } from "src/camera/camera.service";
+import { DeviceService } from "src/device/device.service";
 import { NotificationGateway } from "./notification.gateway";
 import { UserService } from "src/user/user.service";
 
 @Controller("notification")
 export class NotificationController {
 
-    constructor(private notificationService: NotificationService, private cameraService: CameraService, private notificationGateway: NotificationGateway, private userService: UserService) { }
+    constructor(private notificationService: NotificationService, private deviceService: DeviceService, private notificationGateway: NotificationGateway, private userService: UserService) { }
 
     @HttpCode(HttpStatus.CREATED)
     @Post("add")
     @Public()
     async add(@Body() notificationDto: NotificationDto) {
-        const camera = await this.cameraService.findById(notificationDto.camera);
+        const device = await this.deviceService.findById(notificationDto.device);
 
-        if (!camera) return new ForbiddenException("Camera not found");
+        if (!device) return new ForbiddenException("Device not found");
 
         try {
-            const notification = await this.notificationService.create(notificationDto, camera);
+            const notification = await this.notificationService.create(notificationDto, device);
 
-            this.notificationGateway.sendNotification(notification, camera.account.id);
+            this.notificationGateway.sendNotification(notification, device.account.id);
         }
         catch (err) {
             return new InternalServerErrorException("Something went wrong.");

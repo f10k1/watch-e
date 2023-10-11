@@ -1,12 +1,12 @@
 import { Type } from "class-transformer";
 import { ArrayMinSize, IsArray, IsString } from "class-validator";
 
-export class CreateCameraDto {
+export class CreateDeviceDto {
     @IsString()
     name: string;
 }
 
-export class DeleteCameraDto {
+export class DeleteDeviceDto {
     @IsArray({message: "Provide list of ids"})
     @ArrayMinSize(1)
     @Type(() => Number)

@@ -1,3 +1,5 @@
+import { Device } from "../../../types/device";
+
 export default defineEventHandler(async (event) => {
     const { auth } = parseCookies(event);
 
@@ -13,14 +15,10 @@ export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig();
 
-    const body = await readBody(event);
-
-    const res = await $fetch<Notification[]>(`${config.api_url}/camera`, {
-        method: "POST",
+    const res = await $fetch<Device[]>(`${config.api_url}/device`, {
         headers: {
             authorization: "Bearer " + auth
-        },
-        body
+        }
     }).catch(error => error.data);
 
     if (res.message) {

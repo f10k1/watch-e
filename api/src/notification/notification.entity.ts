@@ -2,7 +2,7 @@ import { IsEmail, Matches, Min } from "class-validator";
 import { Account } from "src/user/user.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NotificationTypes } from "./notification.types";
-import { Camera } from "src/camera/camera.entity";
+import { Device } from "src/device/device.entity";
 
 @Entity()
 export class Notification {
@@ -39,6 +39,6 @@ export class Notification {
     @ManyToOne(() => Account, (account) => account.notifications)
     account: Account;
 
-    @ManyToOne(() => Camera, (camera) => camera.notifications)
-    camera: Camera;
+    @ManyToOne(() => Device, (device) => device.notifications)
+    device: Device;
 }

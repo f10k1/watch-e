@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event);
 
-    const res = await $fetch<Notification[]>(`${config.api_url}/camera`, {
+    const res = await $fetch<Notification[]>(`${config.api_url}/device`, {
         method: "DELETE",
         headers: {
             authorization: "Bearer " + auth

@@ -1,4 +1,4 @@
-export interface Camera {
+export interface Device {
     id: number,
     name: string,
     key: string,

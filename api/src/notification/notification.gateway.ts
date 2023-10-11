@@ -1,52 +1,42 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Notification } from "./notification.entity";
-import { Server, Socket } from "socket.io";
+import { Server, WebSocket } from "ws";
 import { AuthService } from "src/auth/auth.service";
+import { UserSocket } from "src/types.global";
 
 
-@WebSocketGateway({ namespace: 'notification', cors: { origin: "http://localhost:3000", serveClient: false } })
-export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({ path: '/notification', cors: { origin: "http://localhost:3000" } })
+export class NotificationGateway implements OnGatewayConnection {
 
     constructor(private authService: AuthService) { }
 
     @WebSocketServer()
     server: Server;
 
-    private connectedUsers: Map<string, number> = new Map();
-
-    async handleConnection(client: Socket) {
-        const [type, token] = client.handshake?.headers?.authorization?.split(' ') ?? [];
+    async handleConnection(client: UserSocket, req: { rawHeaders: string[]; }) {
+        const [type, token] = req.rawHeaders[req.rawHeaders.findIndex((header: string) => header === "Authorization") + 1].split(" ") ?? [];
 
         if (type !== "Bearer" || !token) {
-            client.disconnect();
+            client.close();
             return;
         }
 
         const user = await this.authService.getUser(token);
 
         if (!user) {
-            client.disconnect();
+            client.close();
             return;
         };
-        this.connectedUsers.set(client.id, user.id);
+
+        client.entity = user;
     };
 
     sendNotification(notification: Notification, userId: number) {
-        let client;
+        for (let client of this.server.clients.values()) {
+            if ((client as UserSocket).entity.id !== userId) continue;
 
-        for (let [key, value] of this.connectedUsers.entries()) {
-            if (userId !== value) continue;
-
-            client = key;
-            break;
+            client.emit("notification", notification);
+            return;
         }
-
-        if (!client) return;
-        (this.server.sockets as any).get(client).emit("notification", notification);
     }
-
-    handleDisconnect(client: Socket) {
-        this.connectedUsers.delete(client.id);
-    }
-
 }

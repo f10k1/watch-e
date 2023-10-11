@@ -7,7 +7,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationModule } from './notification/notification.module';
-import { CameraModule } from './camera/camera.module';
+import { DeviceModule } from './device/device.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -20,9 +21,10 @@ import { CameraModule } from './camera/camera.module';
             "database": process.env.DB,
             "entities": ["./**/*.entity.js"],
         }),
+        ScheduleModule.forRoot(),
         UserModule,
         AuthModule,
-        CameraModule,
+        DeviceModule,
         NotificationModule,
     ],
     providers: [

@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import ioClient from 'socket.io-client';
+import { WebSocket } from 'ws';
 import { defineNuxtModule } from '@nuxt/kit';
 
 export default defineNuxtModule((options, nuxt) => {
@@ -7,7 +7,7 @@ export default defineNuxtModule((options, nuxt) => {
     nuxt.hook('listen', (server) => {
 
         const io = new Server(server);
-        const { api_url } = nuxt.options.runtimeConfig;
+        const { ws_url } = nuxt.options.runtimeConfig;
 
         nuxt.hook('close', () => io.close());
 
@@ -20,24 +20,29 @@ export default defineNuxtModule((options, nuxt) => {
                 return;
             }
 
-            const api = ioClient(`${api_url}/notification`, { extraHeaders: { authorization } }).connect();
+            const api = new WebSocket(`${ws_url}/notification`, { headers: { "Authorization": authorization } });
 
-            api.on("connect", () => {
-                api.on("disconnect", () => {
+            api.addEventListener("open", () => {
+                api.addEventListener("close", () => {
                     socket.disconnect();
                 });
 
-                api.on("notification", (data) => {
-                    socket.emit("notification", data);
+                api.on("message", (data: any) => {
+                    data = JSON.parse(data.toString());
+                    switch (data.type) {
+                        case 'notification':
+                            socket.emit("notification", data);
+                            break;
+                    }
                 });
             });
 
             socket.on("disconnect", () => {
-                api.disconnect();
+                api.close();
             });
         });
 
-        io.of('camera').on('connect', (socket) => {
+        io.of('device').on('connect', (socket) => {
             const { authorization } = socket.client.request.headers;
 
             if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -46,28 +51,35 @@ export default defineNuxtModule((options, nuxt) => {
                 return;
             }
 
-            const api = ioClient(`${api_url}/camera`, { extraHeaders: { authorization } }).connect();
+            const api = new WebSocket(`${ws_url}/device`, { headers: { authorization } });
 
-            api.on("connect", () => {
-                api.on("disconnect", () => {
+            api.addEventListener("open", () => {
+                api.addEventListener("close", () => {
                     socket.disconnect();
                 });
 
-                api.on("availables", (data) => {
-                    socket.emit("availables", data);
-                });
+                api.on("message", (data: any) => {
+                    data = JSON.parse(data.toString());
 
-                api.on("accessible", (data) => {
-                    socket.emit("accessible", data);
-                });
-
-                api.on("inaccessible", (data) => {
-                    socket.emit("inaccessible", data);
+                    switch (data.type) {
+                        case 'availables':
+                            socket.emit("availables", data.message);
+                            break;
+                        case 'accessible':
+                            socket.emit("accessible", data.message);
+                            break;
+                        case 'inaccessible':
+                            socket.emit("inaccessible", data.message);
+                            break;
+                        case 'movement':
+                            socket.emit("movement", data.message);
+                            break;
+                    }
                 });
             });
 
             socket.on("disconnect", () => {
-                api.disconnect();
+                api.close();
             });
         });
     });

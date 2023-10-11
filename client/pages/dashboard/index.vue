@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { useNotificationStore } from '~/store/notification';
 import { Bar } from 'vue-chartjs';
-import { useCameraStore } from '~/store/camera';
+import { useDeviceStore } from '~/store/device';
 
 definePageMeta({
     middleware: ["auth"]
 });
 
-const camerasStore = useCameraStore();
+const devicesStore = useDeviceStore();
 
 const notificationsStore = useNotificationStore();
 </script>
@@ -31,15 +31,15 @@ const notificationsStore = useNotificationStore();
                     </v-col>
                 </v-row>
                 <v-row no-gutters>
-                    <v-col lg="6" class="pa-5">
+                    <v-col lg="12" class="pa-5">
                         <v-card>
                             <v-card-item>
                                 <v-card-title>
-                                    <h4 class="text-h5">Cameras</h4>
+                                    <h4 class="text-h5">Devices</h4>
                                 </v-card-title>
                             </v-card-item>
                             <v-card-text>
-                                <v-table v-if="camerasStore.all.length > 0">
+                                <v-table v-if="devicesStore.all.length > 0">
                                     <thead>
                                         <tr>
                                             <th>Name</th>
@@ -47,61 +47,21 @@ const notificationsStore = useNotificationStore();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="camera in camerasStore.limited(3)" :key="camera.id">
-                                            <td>{{ camera.name }}</td>
+                                        <tr v-for="device in devicesStore.limited(3)" :key="device.id">
+                                            <td>{{ device.name }}</td>
                                             <td class="text-center">
-                                                <v-badge inline :color="camera.accessible ? 'success' : 'error'"></v-badge>
+                                                <v-badge inline :color="device.accessible ? 'success' : 'error'"></v-badge>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </v-table>
-                                <span v-else>No cameras to show</span>
-                            </v-card-text>
-                        </v-card>
-                    </v-col>
-                    <v-col lg="6" class="pa-5">
-                        <v-card class="h-100">
-                            <v-card-item>
-                                <v-card-title>
-                                    <h4 class="text-h5">Files</h4>
-                                </v-card-title>
-                            </v-card-item>
-                            <v-card-text>
-                                <v-table>
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th class="text-center">Camera</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Drzwi.mp4</td>
-                                            <td class="text-center">
-                                                Drzwi
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </v-table>
-                            </v-card-text>
-                        </v-card>
-                    </v-col>
-                </v-row>
-                <v-row no-gutters>
-                    <v-col class="pa-5">
-                        <v-card>
-                            <v-card-item>
-                                <v-card-title>
-                                    <h4 class="text-h5">Preview</h4>
-                                </v-card-title>
-                            </v-card-item>
-                            <v-card-text>
+                                <span v-else>No devices to show</span>
                             </v-card-text>
                         </v-card>
                     </v-col>
                 </v-row>
             </v-col>
-            <v-col cols="12" lg="4" md="5" class="pa-5">
+            <v-col cols="12" lg="4" class="pa-5">
                 <v-card class="notifications">
                     <v-card-item>
                         <v-card-title>
@@ -109,8 +69,11 @@ const notificationsStore = useNotificationStore();
                         </v-card-title>
                     </v-card-item>
                     <v-card-text>
-                        <Notification v-for="notification in notificationsStore.all" :key="notification.id"
-                            :notification="notification" :interactive="true"></Notification>
+                        <template v-if="notificationsStore.all.length > 0">
+                            <Notification v-for="notification in notificationsStore.all" :key="notification.id"
+                                :notification="notification" :interactive="true"></Notification>
+                        </template>
+                        <span v-else>No notificaitons</span>
                     </v-card-text>
                 </v-card>
 

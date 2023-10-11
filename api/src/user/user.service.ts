@@ -15,7 +15,7 @@ export class UserService {
     }
 
     async findOne(username: string): Promise<Account | undefined> {
-        return this.userRepository.findOne({ where: { username }, relations: { cameras: true, notifications: true } });
+        return this.userRepository.findOne({ where: { username }, relations: { devices: true, notifications: true } });
     }
 
     async checkIfExists(username: string, email: string): Promise<number> {
