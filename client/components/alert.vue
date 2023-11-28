@@ -5,16 +5,31 @@ import { useAlertStore } from '~/store/alert';
 
 const alertStore = useAlertStore();
 
+const timeout: Ref<ReturnType<typeof setTimeout> | null> = ref(null);
+
+const closeOnTimeout = () => {
+    if (timeout.value) window.clearTimeout(timeout.value);
+
+    if (showAlert) {
+        timeout.value = setTimeout(() => nextAlert(), 10000);
+    }
+};
+
 const showAlert: Ref<boolean> = ref(!!alertStore.alert);
 
 watch(() => alertStore.alert, () => {
     if (!showAlert.value) showAlert.value = !!alertStore.alert;
 });
 
+onMounted(() => {
+    closeOnTimeout();
+});
+
 const nextAlert = () => {
     alertStore.removeAlert();
     setTimeout(() => {
         showAlert.value = !!alertStore.alert;
+        closeOnTimeout();
     }, 400);
 }
 
