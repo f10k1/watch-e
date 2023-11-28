@@ -1,95 +1,29 @@
 <script lang="ts" setup>
-import { Device } from 'types/device';
+import type { Device } from '~/types/device';
 import { useDeviceStore } from '~/store/device';
+import { DeviceModalsAdd, DeviceModalsDelete, DeviceModalsEdit } from '#components';
+definePageMeta(
+    {
+        layout: "dashboard",
+        middleware: ["auth"]
+    });
 
-interface Modals {
-    [key: string]: {
-        show: boolean,
-        loading: boolean,
-        sent: boolean,
-        error: boolean,
-        device?: Partial<Device>,
-    };
-}
-
-definePageMeta({
-    middleware: ["auth"]
-});
-
-const rules = ref([required]);
 const devicesStore = useDeviceStore();
 
-const modals: Modals = reactive({
-    add: {
-        show: false,
-        loading: false,
-        sent: false,
-        error: false,
-        device: { name: '' }
-    },
-    delete: {
-        show: false,
-        error: false,
-        sent: false,
-        loading: false
-    },
-    edit: {
-        show: false,
-        error: false,
-        sent: false,
-        loading: false,
-    }
-});
+const checkAll: Ref<boolean> = ref(false);
+
+const addModalRef: Ref<typeof DeviceModalsAdd | null> = ref(null);
+const editModalRef: Ref<typeof DeviceModalsEdit | null> = ref(null);
+const deleteModalRef: Ref<typeof DeviceModalsDelete | null> = ref(null);
 
 const checkedIds: Ref<number[]> = ref([]);
 
-const checkedDevices: ComputedRef<Device[]> = computed(() => devicesStore.all.filter((device) => checkedIds.value.includes(device.id)))
+const deviceToEdit: Ref<Device | null> = ref(null);
 
-const add = async () => {
-    if (modals.add.device?.name === undefined) return;
-
-    modals.add.loading = true;
-
-    const data = await devicesStore.add(modals.add.device.name);
-
-    modals.add.loading = false;
-
-    if (data === null) return;
-
-    modals.add.device = { ...data };
-};
-
-const remove = async () => {
-    modals.delete.sent = true;
-
-    if (checkedIds.value.length === 0) {
-        return;
-    }
-
-    modals.delete.error = !(await devicesStore.remove(checkedIds.value));
-
-    checkedIds.value = [];
-};
-
-watch(() => modals.add.show, () => {
-    modals.add = {
-        ...modals.add,
-        error: false,
-        sent: false,
-        loading: false,
-        device: { name: '' }
-    };
-});
-
-watch(() => modals.delete.show, () => {
-    modals.delete = {
-        ...modals.delete,
-        error: false,
-        sent: false,
-        loading: false
-    };
-});
-
+watch(checkAll, () => {
+    if (checkAll.value) checkedIds.value = [...devicesStore.all.map((device) => device.id)]
+    else checkedIds.value = []
+})
 </script>
 
 <template>
@@ -99,9 +33,12 @@ watch(() => modals.delete.show, () => {
                 <v-table>
                     <thead>
                         <tr>
-                            <th></th>
+                            <th>
+                                <v-checkbox-btn v-model="checkAll" :value="true"></v-checkbox-btn>
+                            </th>
                             <th>Name</th>
                             <th>Key</th>
+                            <th></th>
                             <th class="text-center">Status</th>
                         </tr>
                     </thead>
@@ -112,6 +49,9 @@ watch(() => modals.delete.show, () => {
                             <td class="d-flex align-center">
                                 {{ device.key }}
                                 <CopyButton :text="device.key"></CopyButton>
+                            </td>
+                            <td>
+                                <v-btn size="small" color="info" icon="mdi-pencil" @click="deviceToEdit = device"></v-btn>
                             </td>
                             <td class="text-center">
                                 <v-badge inline :color="device.accessible ? 'success' : 'error'"></v-badge>
@@ -124,76 +64,13 @@ watch(() => modals.delete.show, () => {
                 </v-table>
             </v-col>
         </v-row>
-        <Stream v-if="devicesStore.allStreams.length" :stream="devicesStore.allStreams[0].frames"></Stream>
     </v-container>
-    <ActionButtons @add="modals.add.show = true" @delete="modals.delete.show = true" @edit="modals.edit.show = true">
+    <ActionButtons @add="addModalRef?.modal.toggleModal()" @delete="deleteModalRef?.modal.toggleModal()"
+        :show="{ add: true, delete: true, edit: false }" :disable="{ delete: checkedIds.length === 0 }">
     </ActionButtons>
-    <v-dialog v-model="modals.add.show" width="500">
-        <v-card>
-            <v-card-title>
-                Add new device
-            </v-card-title>
-            <v-card-text>
-                <v-text-field label="Name" :rules="rules" v-model="modals.add.device.name" variant="underlined"
-                    :disabled="!!modals.add.device?.id"></v-text-field>
-                <v-card  variant="outlined">
-                    <v-card-title class="d-flex align-center">
-                        Key
-                        <CopyButton :text="modals.add.device?.key" v-if="modals.add.device?.key"></CopyButton>
-                    </v-card-title>
-                    <v-card-text>
-                        {{ modals.add.device?.key ?? '' }}
-                    </v-card-text>
-                </v-card>
-            </v-card-text>
-            <v-card-actions>
-                <v-btn :loading="modals.add.loading"
-                    :disabled="!!modals.add.device.id || modals.add.device.name?.length === 0" @click="add">
-                    Add
-                </v-btn>
-                <v-btn @click="modals.add.show = false">Close</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
-    <v-dialog v-model="modals.delete.show" width="500">
-        <v-card>
-            <v-card-text class="text-center">
-                Are you sure you want remove selected devices?
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn :loading="modals.delete.loading" @click="remove"
-                    :color="modals.delete.sent && !modals.delete.error && !modals.delete.loading && 'success' || modals.delete.error && 'error' || ''">
-                    Remove
-                </v-btn>
-                <v-btn @click="modals.delete.show = false">Close</v-btn>
-                <v-spacer></v-spacer>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
-    <v-dialog v-model="modals.edit.show" width="500">
-        <v-card>
-            <v-card-title class="text-center">
-                Edit {{ checkedIds.length === 1 ? 'device' : `${checkedIds.length} devices` }}
-            </v-card-title>
-            <v-card-text>
-                <v-text-field :label="`${device.name} new name`" :key="device.id" :rules="rules"
-                    v-for="(device, index) in checkedDevices" variant="underlined"
-                    v-model="checkedDevices[index].name"
-                    :disabled="!!modals.add.device?.id"></v-text-field>
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn :loading="modals.delete.loading" @click="remove"
-                    :color="modals.delete.sent && !modals.delete.error && !modals.delete.loading && 'success' || modals.delete.error && 'error' || ''"
-                    v-if="checkedDevices.length > 0">
-                    Remove
-                </v-btn>
-                <v-btn @click="modals.edit.show = false">Close</v-btn>
-                <v-spacer></v-spacer>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    <DeviceModalsAdd ref="addModalRef" :devices="devicesStore.all" />
+    <DeviceModalsDelete ref="deleteModalRef" @removed="checkedIds = []" :devices="checkedIds" />
+    <DeviceModalsEdit v-if="deviceToEdit" ref="editModalRef" :device="deviceToEdit" @reset="deviceToEdit = null" />
 </template>
 
 <style lang="scss"></style>

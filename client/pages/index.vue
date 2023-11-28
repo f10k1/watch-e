@@ -6,6 +6,7 @@ import { useAlertStore } from "@/store/alert";
 import { required } from "@/utils/validators";
 
 definePageMeta({
+    layout: "default",
     middleware: () => {
         const auth = useCookie("auth").value;
 

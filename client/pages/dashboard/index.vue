@@ -4,6 +4,7 @@ import { Bar } from 'vue-chartjs';
 import { useDeviceStore } from '~/store/device';
 
 definePageMeta({
+    layout: "dashboard",
     middleware: ["auth"]
 });
 
