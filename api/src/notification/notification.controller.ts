@@ -5,13 +5,13 @@ import { NotificationService } from "./notification.service";
 import { Request } from "express";
 import { Notification } from "./notification.entity";
 import { DeviceService } from "src/device/device.service";
-import { NotificationGateway } from "./notification.gateway";
 import { UserService } from "src/user/user.service";
+import { UserGateway } from "src/user/user.gateway";
 
 @Controller("notification")
 export class NotificationController {
 
-    constructor(private notificationService: NotificationService, private deviceService: DeviceService, private notificationGateway: NotificationGateway, private userService: UserService) { }
+    constructor(private notificationService: NotificationService, private deviceService: DeviceService, private userGateway: UserGateway, private userService: UserService) { }
 
     @HttpCode(HttpStatus.CREATED)
     @Post("add")
@@ -22,9 +22,9 @@ export class NotificationController {
         if (!device) return new ForbiddenException("Device not found");
 
         try {
-            const notification = await this.notificationService.create(notificationDto, device);
+            const notification: Notification = await this.notificationService.create(notificationDto, device);
 
-            this.notificationGateway.sendNotification(notification, device.account.id);
+            this.userGateway.sendNotification(notification, device.account.id);
         }
         catch (err) {
             return new InternalServerErrorException("Something went wrong.");

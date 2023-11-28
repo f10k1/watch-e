@@ -14,12 +14,11 @@ export class NotificationService {
         private userService: UserService
     ) { };
 
-    async create(notificationDto: NotificationDto, device: Device): Promise<Notification> {
+    async create(notificationDto: Partial<NotificationDto>, device: Device): Promise<Notification> {
 
         const notification = await this.notificationRepository.create({ content: notificationDto.content, type: notificationDto.type, account: device.account });
 
         return await this.notificationRepository.save(notification);
-
     }
 
     async getAll(user: Account): Promise<Notification[] | null> {

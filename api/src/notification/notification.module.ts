@@ -6,16 +6,15 @@ import { NotificationService } from "./notification.service";
 import { DeviceModule } from "src/device/device.module";
 import { AuthModule } from "src/auth/auth.module";
 import { UserModule } from "src/user/user.module";
-import { NotificationGateway } from "./notification.gateway";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Notification]),
-        DeviceModule,
+        forwardRef(() => DeviceModule),
         AuthModule,
-        UserModule
+        forwardRef(() => UserModule)
     ],
-    providers: [NotificationService, NotificationGateway],
+    providers: [NotificationService],
     controllers: [NotificationController],
     exports: [NotificationService]
 })
