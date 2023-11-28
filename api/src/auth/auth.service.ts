@@ -16,18 +16,18 @@ export class AuthService {
         const user = await this.usersService.findOne(username);
 
         try {
-            console.log(username, password);
             if (!user || !(await bcrypt.compare(password, user.password))) throw new UnauthorizedException({ auth: "Wrong username or password" });
+
             const payload = { username: user.username, sub: user.id };
 
             delete user.password;
 
             return {
-                token: this.jwtService.sign(payload),
+                token: this.jwtService.sign(payload, { "secret": `${process.env.JWT_KEY}`}),
                 ...user
             };
         }
-        catch {
+        catch{
             throw new UnauthorizedException({ auth: "Wrong username or password" });
         }
     }
@@ -35,7 +35,7 @@ export class AuthService {
     async getUser(token: string): Promise<Account | null> {
 
         try {
-            const valid = this.jwtService.verify(token);
+            const valid = this.jwtService.verify(token, {"secret": `${process.env.JWT_KEY}`});
 
             if (valid) {
                 const user = await this.usersService.findOne(valid.username);
