@@ -1,14 +1,14 @@
-import { io } from "socket.io-client";
+import { SSEClient } from "plugins/sse";
 
 declare module '#app' {
     interface NuxtApp {
-        $socket: typeof io;
+        $sse: SSEClient;
     }
 }
 
 declare module 'vue' {
     interface ComponentCustomProperties {
-        $socket: typeof io;
+        $sse: SSEClient;
     }
 }
 

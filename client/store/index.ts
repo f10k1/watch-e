@@ -15,10 +15,8 @@ export const useStore = defineStore('index', () => {
     const userinfo = computed(() => user.value);
     const token = computed(() => user.value?.token);
 
-    const fetchUserData = async () => {
-        try {
-            const res = await useFetch<User>("/api/user", { method: "POST" });
-
+    const fetchUserData = async (): Promise<void> => {
+        useFetch<User>("/api/user", { method: "POST"}).then((res) => {
             if (res.error.value && res.error.value.data) {
                 user.value = null;
                 alertStore.addMessage(res.error.value.data.message, res.error.value.data.statusCode);
@@ -30,13 +28,12 @@ export const useStore = defineStore('index', () => {
 
             if (res.status.value == "success" && data) {
                 user.value = { ...data };
-                router.push("/dashboard");
             }
-        } catch (err: any) {
+        }).catch(err => {
             user.value = null;
-            alertStore.addAlert(err.message);
             router.push("/");
-        }
+            alertStore.addAlert(err.message);
+        });
     };
 
     const login = async (body: any): Promise<void> => {

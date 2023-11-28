@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { useStore } from '~/store';
-import { Device } from '~/types/device';
+import type { Device } from '~/types/device';
 import { useAlertStore } from '~/store/alert';
 import { useCustomFetch } from '~/composables/use-custom-fetch';
 
@@ -13,8 +13,8 @@ export const useDeviceStore = defineStore('device', () => {
 
     const events = reactive({
         deviceAccessible: {
-            name: "accessible",
-            callback: (data: number) => {
+            event: "accessible",
+            callback: ({ data }: { data: number; }) => {
                 const index = devices.value.findIndex((device) => device.id === data);
                 if (index === -1) return;
 
@@ -22,8 +22,8 @@ export const useDeviceStore = defineStore('device', () => {
             }
         },
         deviceInaccessible: {
-            name: "inaccessible",
-            callback: (data: number) => {
+            event: "inaccessible",
+            callback: ({ data }: { data: number; }) => {
                 const index = devices.value.findIndex((device) => device.id === data);
                 if (index === -1) return;
 
@@ -31,15 +31,15 @@ export const useDeviceStore = defineStore('device', () => {
             }
         },
         devicesActive: {
-            name: "availables",
-            callback: (data: number[]) => {
+            event: "availables",
+            callback: ({ data }: { data: number[]; }) => {
                 devices.value.forEach((device) => {
                     if (data.includes(device.id)) device.accessible = true;
                 });
             }
         },
         frameRec: {
-            name: "movement",
+            event: "movement",
             callback: () => {
             }
         }
@@ -61,7 +61,7 @@ export const useDeviceStore = defineStore('device', () => {
             alertStore.addAlert(err.message);
         }
 
-        useSocket("/device", [events.deviceAccessible, events.deviceInaccessible, events.devicesActive, events.frameRec]);
+        useSSE("/api/sse", [events.deviceAccessible, events.deviceInaccessible, events.devicesActive, events.frameRec]);
     };
 
     const remove = async (deviceIds: number[]): Promise<boolean> => {
@@ -76,14 +76,35 @@ export const useDeviceStore = defineStore('device', () => {
         }
     };
 
-    const add = async (name: string): Promise<Device | null> => {
+    const add = async (device: Omit<Device, "id" | "key">): Promise<Device | null> => {
         try {
-            const { data } = await useCustomFetch<Device>(`/api/device`, { method: "POST", body: { name } });
+            const { data } = await useCustomFetch<Device>(`/api/device`, { method: "POST", body: { ...device } });
 
             if (data) {
-                devices.value.push(data);
-                return data;
+                devices.value.push(JSON.parse(JSON.stringify(data)));
+
+                return JSON.parse(JSON.stringify(data));
             }
+
+        } catch (err: any) {
+            alertStore.addAlert(err.message);
+        }
+
+        return null;
+    };
+
+    const change = async (changes: Omit<Device, "key">): Promise<Device | null> => {
+        try {
+            await useCustomFetch<Device>(`/api/device`, { method: "PATCH", body: { ...changes } });
+
+            const index = devices.value.findIndex(device => changes.id == device.id);
+
+            if (index === -1) return null;
+
+            devices.value[index] = {
+                ...devices.value[index],
+                ...changes
+            };
 
         } catch (err: any) {
             alertStore.addAlert(err.message);
@@ -97,6 +118,7 @@ export const useDeviceStore = defineStore('device', () => {
         limited,
         init,
         remove,
-        add
+        add,
+        change
     };
 });

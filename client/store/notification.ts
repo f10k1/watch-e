@@ -1,4 +1,4 @@
-import { SocketEvent } from 'composables/use-socket';
+import { ServerEvent } from 'composables/use-sse';
 import { defineStore } from 'pinia';
 import { useStore } from '~/store';
 import { Notification } from '~/types/notification';
@@ -11,9 +11,9 @@ export const useNotificationStore = defineStore('notification', () => {
     const store = useStore();
 
     const notifications: Ref<Notification[]> = ref([]);
-    const updateNotificationsEvent: Ref<SocketEvent> = ref({
-        name: "notification",
-        callback: (data) => {
+    const updateNotificationsEvent: Ref<ServerEvent> = ref({
+        event: "notification",
+        callback: ({ data }) => {
             notifications.value.push(data);
         }
     });
@@ -43,7 +43,7 @@ export const useNotificationStore = defineStore('notification', () => {
             alertStore.addAlert(err.message);
         }
 
-        useSocket("/notification", [updateNotificationsEvent.value]);
+        useSSE("/api/sse", [updateNotificationsEvent.value]);
     };
 
     const remove = async (id: number) => {
