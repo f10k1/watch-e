@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './http-exception.filter';
-import { WsAdapter } from '@nestjs/platform-ws'
+import { WsAdapter } from '@nestjs/platform-ws';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -19,6 +20,16 @@ async function bootstrap() {
             return new UnprocessableEntityException(messages);
         },
     }));
+
+    const microservice = app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.MQTT,
+        options: {
+            host: process.env.MQTT_HOST,
+            port: +process.env.MQTT_PORT
+        }
+    });
+
+    app.startAllMicroservices();
 
     app.useWebSocketAdapter(new WsAdapter(app));
 
