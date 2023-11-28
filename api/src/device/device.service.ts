@@ -17,7 +17,7 @@ export class DeviceService {
 
     async create(deviceDto: CreateDeviceDto, user: Account): Promise<Device> {
         const key = Crypto.randomBytes(48).toString("hex");
-        const notification = await this.deviceRepository.create({ name: deviceDto.name, key, account: user });
+        const notification = await this.deviceRepository.create({ name: deviceDto.name, key, account: user, settings: deviceDto.settings });
         return await this.deviceRepository.save(notification);
     }
 

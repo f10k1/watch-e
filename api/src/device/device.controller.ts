@@ -1,15 +1,19 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Patch, Post, Req } from "@nestjs/common";
-import { Public } from "src/metadata.guard";
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, NotFoundException, Param, Patch, Post, Req } from "@nestjs/common";
 import { Request } from "express";
 import { DeviceService } from "src/device/device.service";
 import { CreateDeviceDto, DeleteDeviceDto } from "./device.dto";
 import { UserService } from "src/user/user.service";
 import { Device } from "./device.entity";
+import { ClientProxy, Ctx, MessagePattern, MqttContext, Payload } from "@nestjs/microservices";
+import { UserGateway } from "src/user/user.gateway";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import { NotificationTypes } from "src/notification/notification.types";
+import { NotificationService } from "src/notification/notification.service";
 
 @Controller("device")
 export class DeviceController {
 
-    constructor(private deviceService: DeviceService, private userService: UserService) { }
+    constructor(private deviceService: DeviceService, private userService: UserService, private userGateway: UserGateway, private schedulerRegistry: SchedulerRegistry, private notificationService: NotificationService, @Inject('MQTT_SERVICE') private client: ClientProxy,) { }
 
     @HttpCode(HttpStatus.CREATED)
     @Post("")
@@ -53,6 +57,8 @@ export class DeviceController {
 
         try {
             await this.deviceService.update(device, deviceDto);
+
+            this.client.send(`${device.key}/settings`, { ...device.settings });
         } catch {
             return new InternalServerErrorException("Something went wrong.");
         }
@@ -81,6 +87,50 @@ export class DeviceController {
             devices.forEach(async (device) => await this.deviceService.remove(device));
         } catch {
             return new InternalServerErrorException("Something went wrong.");
+        }
+    }
+
+    @MessagePattern("+/status")
+    async deviceStatus(@Payload() data: string, @Ctx() context: MqttContext) {
+        const [key] = context.getTopic().split('/');
+
+        const device = await this.deviceService.findByKey(key);
+
+        if (!device) return;
+
+        const interval = setInterval(() => {
+            this.userGateway.handleDeviceDisconnect(device.id, device.account.id);
+        }, 20000);
+
+        if (!this.schedulerRegistry.getInterval(key)) {
+            this.userGateway.handleDeviceConnect(device.id, device.account.id);
+
+            this.schedulerRegistry.addInterval(key, interval);
+
+            return;
+        }
+
+        this.schedulerRegistry.deleteInterval(key);
+
+        this.schedulerRegistry.addInterval(key, interval);
+    }
+
+    @MessagePattern("+/movement")
+    async trackMovement(@Payload() data: boolean, @Ctx() context: MqttContext) {
+        const [key] = context.getTopic().split('/');
+
+        const device = await this.deviceService.findByKey(key);
+
+        if (!device || !device.settings.notificationOnMovement) return;
+
+        try {
+            const content = data ? `Movement started` : `Movement stopped`;
+            const notification = await this.notificationService.create({ content, type: NotificationTypes.INFO }, device);
+
+            this.userGateway.sendNotification(notification, device.account.id);
+        }
+        catch (err) {
+            console.log(err);
         }
     }
 }
